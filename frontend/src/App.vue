@@ -1,118 +1,147 @@
 <template>
-  <div class="container mt-4">
-    <h1 class="text-center mb-4">Калькулятор очередей</h1>
-
-    <div class="card">
-      <div class="card-body">
-        <form @submit.prevent="calculate" class="mx-auto" style="max-width: 500px;">
-          <!-- Простой выбор типа системы -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">Тип системы</label>
-            <select v-model="model" class="form-select form-select-lg">
-              <option value="mm1">Один кассир (M/M/1)</option>
-              <option value="mmc">Несколько кассиров (M/M/c)</option>
-            </select>
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-lg border-0 rounded-lg">
+          <div class="card-header bg-primary text-white text-center py-4">
+            <h2 class="mb-0">Калькулятор очередей</h2>
+            <p class="text-white-50 mb-0">Рассчитайте оптимальное время обслуживания</p>
           </div>
 
-          <!-- Базовые параметры с подсказками -->
-          <div class="mb-4">
-            <label class="form-label fw-bold">
-              Сколько клиентов приходит в час?
-              <small class="text-muted d-block">Например: 30 клиентов в час</small>
-            </label>
-            <input
-                type="number"
-                class="form-control form-control-lg"
-                v-model="params.arrivalRate"
-                min="1"
-                required
-            >
-          </div>
+          <div class="card-body p-4">
+            <form @submit.prevent="calculate">
+              <!-- Тип системы -->
+              <div class="mb-4">
+                <label class="form-label h6">
+                  <i class="bi bi-gear-fill me-2"></i>Тип системы
+                </label>
+                <select v-model="model" class="form-select form-select-lg border-0 bg-light">
+                  <option value="mm1">Один кассир (M/M/1)</option>
+                  <option value="mmc">Несколько кассиров (M/M/c)</option>
+                </select>
+              </div>
 
-          <div class="mb-4">
-            <label class="form-label fw-bold">
-              Сколько клиентов может обслужить один кассир в час?
-              <small class="text-muted d-block">Например: 40 клиентов в час</small>
-            </label>
-            <input
-                type="number"
-                class="form-control form-control-lg"
-                v-model="params.serviceRate"
-                min="1"
-                required
-            >
-          </div>
+              <!-- Параметры -->
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input
+                        type="number"
+                        class="form-control bg-light border-0"
+                        id="arrivalRate"
+                        v-model="params.arrivalRate"
+                        min="1"
+                        required
+                        placeholder="Клиентов в час"
+                    >
+                    <label for="arrivalRate">Клиентов в час</label>
+                  </div>
+                  <small class="text-muted">Например: 30 клиентов в час</small>
+                </div>
 
-          <div class="mb-4" v-if="model === 'mmc'">
-            <label class="form-label fw-bold">
-              Количество кассиров
-              <small class="text-muted d-block">Например: 2 кассира</small>
-            </label>
-            <input
-                type="number"
-                class="form-control form-control-lg"
-                v-model="params.servers"
-                min="1"
-                required
-            >
-          </div>
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input
+                        type="number"
+                        class="form-control bg-light border-0"
+                        id="serviceRate"
+                        v-model="params.serviceRate"
+                        min="1"
+                        required
+                        placeholder="Обслуживание в час"
+                    >
+                    <label for="serviceRate">Обслуживание в час</label>
+                  </div>
+                  <small class="text-muted">Например: 40 клиентов в час</small>
+                </div>
 
-          <button type="submit" class="btn btn-primary btn-lg w-100">Рассчитать</button>
-        </form>
+                <div class="col-12" v-if="model === 'mmc'">
+                  <div class="form-floating">
+                    <input
+                        type="number"
+                        class="form-control bg-light border-0"
+                        id="servers"
+                        v-model="params.servers"
+                        min="1"
+                        required
+                        placeholder="Количество кассиров"
+                    >
+                    <label for="servers">Количество кассиров</label>
+                  </div>
+                  <small class="text-muted">Например: 2 кассира</small>
+                </div>
+              </div>
 
-        <!-- Упрощенные результаты -->
-        <div v-if="results" class="mt-4">
-          <h3 class="text-center mb-3">Результаты расчета</h3>
-          <div class="row g-4">
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h5 class="card-title">Время ожидания</h5>
-                  <p class="card-text">
-                    Клиент проведет в очереди около
-                    <strong>{{ formatTime(results.wq) }}</strong>
-                  </p>
+              <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="bi bi-calculator me-2"></i>Рассчитать
+                </button>
+              </div>
+            </form>
+
+            <!-- Результаты -->
+            <div v-if="results" class="mt-5">
+              <h4 class="text-center mb-4">Результаты расчета</h4>
+              <div class="row g-4">
+                <div class="col-md-6">
+                  <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center p-4">
+                      <i class="bi bi-clock-history display-4 text-primary mb-3"></i>
+                      <h5 class="card-title">Время ожидания</h5>
+                      <p class="card-text h4 text-primary">
+                        {{ formatTime(results.wq) }}
+                      </p>
+                      <p class="text-muted small">в очереди</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center p-4">
+                      <i class="bi bi-clock display-4 text-primary mb-3"></i>
+                      <h5 class="card-title">Общее время</h5>
+                      <p class="card-text h4 text-primary">
+                        {{ formatTime(results.w) }}
+                      </p>
+                      <p class="text-muted small">полное обслуживание</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center p-4">
+                      <i class="bi bi-person-workspace display-4 text-primary mb-3"></i>
+                      <h5 class="card-title">Загруженность</h5>
+                      <p class="card-text h4 text-primary">
+                        {{ formatPercent(results.utilization) }}%
+                      </p>
+                      <p class="text-muted small">занятость кассиров</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="card h-100 border-0 bg-light">
+                    <div class="card-body text-center p-4">
+                      <i class="bi bi-people display-4 text-primary mb-3"></i>
+                      <h5 class="card-title">Очередь</h5>
+                      <p class="card-text h4 text-primary">
+                        {{ formatNumber(results.lq) }}
+                      </p>
+                      <p class="text-muted small">человек в среднем</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h5 class="card-title">Общее время</h5>
-                  <p class="card-text">
-                    Всё обслуживание займет около
-                    <strong>{{ formatTime(results.w) }}</strong>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h5 class="card-title">Загруженность</h5>
-                  <p class="card-text">
-                    Кассиры заняты
-                    <strong>{{ formatPercent(results.utilization) }}%</strong> времени
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-body">
-                  <h5 class="card-title">Очередь</h5>
-                  <p class="card-text">
-                    В среднем в очереди
-                    <strong>{{ formatNumber(results.lq) }}</strong> человек
-                  </p>
-                </div>
-              </div>
+
+            <div v-if="error" class="alert alert-danger mt-4 d-flex align-items-center">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              {{ formatError(error) }}
             </div>
           </div>
-        </div>
-
-        <div v-if="error" class="alert alert-danger mt-3">
-          {{ formatError(error) }}
         </div>
       </div>
     </div>
@@ -123,7 +152,7 @@
 import axios from 'axios';
 
 export default {
-  name: 'App',
+  name: 'QueueCalculator',
   data() {
     return {
       model: 'mm1',
