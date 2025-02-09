@@ -1,0 +1,6 @@
+@QueuingTheory.Api_HostAddress = http://localhost:5063
+
+GET {{QueuingTheory.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
